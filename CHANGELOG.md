@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### 🔒 Security
+- **CRITICAL**: Removed exposed API keys from .env file that was accidentally committed
+- **API Key Exposure**: OpenAI API key and HubSpot token were visible in git history
+- **Mitigation**: Removed .env from tracking, added safe .env.example template
+
 ### ✨ Added
 - **Repository Setup**: Comprehensive .gitignore file for Node.js/TypeScript monorepo with Turbo build system
 - **Build Artifact Management**: Proper exclusion of Turbo cache files, logs, and temporary files
