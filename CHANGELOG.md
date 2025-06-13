@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ✨ Added
+- **Repository Setup**: Comprehensive .gitignore file for Node.js/TypeScript monorepo with Turbo build system
+- **Build Artifact Management**: Proper exclusion of Turbo cache files, logs, and temporary files
+
 ### 🔧 Changed
 - **Voice Performance Optimization**: Removed artificial response length limits (max_response_output_tokens) that were cutting off assistant responses
 - **Speed Adjustment**: Changed default speech speed from 1.5x to 1.2x for optimal pace - fast but not hurried
