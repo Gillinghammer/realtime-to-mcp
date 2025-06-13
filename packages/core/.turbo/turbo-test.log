@@ -1,0 +1,48 @@
+
+> @realtime-mcp/core@0.1.0 test
+> vitest run
+
+[1G[0K
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90m/Users/cgillingham/Code/realtime-to-mcp/packages/core[39m
+
+[?25l [32m✓[39m [2msrc/[22mproxy[2m.test.ts[22m[2m (10)[22m
+   [32m✓[39m RealtimeMCPProxy[2m (10)[22m
+     [32m✓[39m constructor[2m (3)[22m
+       [32m✓[39m should create proxy with valid configuration
+       [32m✓[39m should throw error with invalid configuration
+       [32m✓[39m should validate configuration using Zod schema
+     [32m✓[39m state management[2m (2)[22m
+       [32m✓[39m should start in disconnected state
+       [32m✓[39m should emit state change events
+     [32m✓[39m tool management[2m (1)[22m
+       [32m✓[39m should start with empty tools array
+     [32m✓[39m event handling[2m (2)[22m
+       [32m✓[39m should support adding and removing event listeners
+       [32m✓[39m should handle function call events
+     [32m✓[39m configuration validation[2m (2)[22m
+       [32m✓[39m should accept minimal valid configuration
+       [32m✓[39m should apply default values from schema
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G [32m✓[39m [2msrc/[22mproxy[2m.test.ts[22m[2m (10)[22m
+   [32m✓[39m RealtimeMCPProxy[2m (10)[22m
+     [32m✓[39m constructor[2m (3)[22m
+       [32m✓[39m should create proxy with valid configuration
+       [32m✓[39m should throw error with invalid configuration
+       [32m✓[39m should validate configuration using Zod schema
+     [32m✓[39m state management[2m (2)[22m
+       [32m✓[39m should start in disconnected state
+       [32m✓[39m should emit state change events
+     [32m✓[39m tool management[2m (1)[22m
+       [32m✓[39m should start with empty tools array
+     [32m✓[39m event handling[2m (2)[22m
+       [32m✓[39m should support adding and removing event listeners
+       [32m✓[39m should handle function call events
+     [32m✓[39m configuration validation[2m (2)[22m
+       [32m✓[39m should accept minimal valid configuration
+       [32m✓[39m should apply default values from schema
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m10 passed[39m[22m[90m (10)[39m
+[2m   Start at [22m 16:53:37
+[2m   Duration [22m 297ms[2m (transform 37ms, setup 0ms, collect 53ms, tests 4ms, environment 0ms, prepare 48ms)[22m
+
+[?25h[?25h[1G[0K⠙[1G[0K

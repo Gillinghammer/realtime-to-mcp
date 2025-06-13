@@ -1,0 +1,83 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### 🔧 Changed
+- **Voice Performance Optimization**: Removed artificial response length limits (max_response_output_tokens) that were cutting off assistant responses
+- **Speed Adjustment**: Changed default speech speed from 1.5x to 1.2x for optimal pace - fast but not hurried
+- **Configuration Architecture**: Implemented proper default + override pattern for session configuration
+- **Centralized Defaults**: Created getDefaultSessionConfig() utility for consistent voice interface settings across all implementations
+- **Transcript Ordering Fix**: Eliminated streaming race conditions by collecting complete AI responses before adding to transcript, ensuring perfect chronological order
+- **UI Cleanup**: Removed duplicate "Voice chat active" status messages for cleaner interface
+
+### 🐛 Fixed
+- **Transcript Chronological Order**: Tool calls now appear in correct sequence (User → Tool Call → AI Response) instead of interrupting streaming responses
+- **JavaScript Syntax Error**: Fixed malformed if-else chain in handleVoiceMessage function
+- **Missing Configuration**: Voice demo now properly applies performance optimizations (speed, temperature, turn detection) that were previously ignored
+
+### ✨ Added
+- **🎙️ Unified Voice Demo** - Single interface for all MCP providers with dynamic switching
+- Root README.md with simplified API showcase
+- Clean examples focusing on WebRTCBridgeServer  
+- Comprehensive documentation for browser integration
+- Dynamic MCP provider selection with real-time status
+- Single .env configuration for all API keys
+- Automatic voice chat activation after MCP connection
+- Streamlined Connect/Disconnect controls for entire flow
+
+### 🔧 Changed
+- **BREAKING**: Made `WebRTCBridgeServer` the primary API in exports
+- Updated all documentation to feature WebRTCBridgeServer as main API
+- Simplified READY_TO_BEGIN.md to match actual implementation
+- Updated core package README with ultra-simple getting started
+- Cleaned up HubSpot example to showcase canonical usage pattern
+- **UI Simplification**: Removed separate microphone controls - Connect button now handles entire flow
+- Auto-start voice chat immediately after MCP provider connection
+- Simplified status messaging for clearer user experience
+- **Complete UI Redesign**: Modern, minimal design replacing childish bright colors and excessive rounded corners
+- **Layout Reorganization**: Moved Connect/Disconnect buttons under provider selection, function calls to right panel
+- **Tools Modal**: Available tools moved to clean modal interface accessed via button
+- **Function Call Panel**: Real-time function execution display in dedicated right sidebar
+
+### 🗑️ Removed
+- **Separate example directories** - Replaced with unified voice demo
+- Complex manual implementation examples that didn't use library API
+- Redundant bridge implementations in examples
+- References to deprecated manual approaches
+- **Bright gradient backgrounds** and childish color schemes
+- **Connection logs panel** - simplified interface focus
+- **Excessive emojis** and rounded design elements
+- **Separate microphone controls** - merged into single Connect flow
+
+### 📝 Documentation
+- Updated README files across all packages to be consistent
+- Added comprehensive configuration documentation
+- Improved browser integration examples
+- Streamlined example setup instructions
+
+## [0.1.0] - 2024-12-XX
+
+### ✨ Added
+- Initial release of Realtime MCP Proxy library
+- WebRTCBridgeServer for easy integration
+- RealtimeMCPProxy for advanced usage
+- Full TypeScript support with comprehensive types
+- Working examples for HubSpot, HackerNews, and Airbnb MCP servers
+- Browser demo pages for voice interactions
+- Automatic MCP server process management
+- Ephemeral API key generation for WebRTC
+- Health check and status endpoints
+- CORS support and graceful shutdown handling
+
+### 🏗️ Technical
+- Monorepo structure with packages and examples
+- Turbo build system for efficient development
+- Comprehensive error handling and timeouts
+- Event system for monitoring and debugging
+- Support for both HTTP and stdio MCP servers
+- Zod validation for configurations 

@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 Generic WebRTC + MCP Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .main-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .side-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .status.connecting { background: rgba(255, 193, 7, 0.3); border: 2px solid #ffc107; }
+        .status.connected { background: rgba(40, 167, 69, 0.3); border: 2px solid #28a745; }
+        .status.error { background: rgba(220, 53, 69, 0.3); border: 2px solid #dc3545; }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .voice-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .connection-indicator {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.8em;
+            transition: all 0.3s ease;
+        }
+        .connection-indicator.connected {
+            background: rgba(40, 167, 69, 0.5);
+            border-color: #28a745;
+            animation: pulse 2s infinite;
+        }
+        .connection-indicator.talking {
+            background: rgba(220, 53, 69, 0.5);
+            border-color: #dc3545;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .audio-level {
+            margin: 15px 0;
+        }
+        .audio-bar {
+            width: 200px;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px auto;
+        }
+        .audio-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .transcript-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .transcript {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .transcript-entry {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .transcript-entry.user {
+            background: rgba(59, 130, 246, 0.2);
+            border-left-color: #3b82f6;
+        }
+        .transcript-entry.assistant {
+            background: rgba(34, 197, 94, 0.2);
+            border-left-color: #22c55e;
+        }
+        .transcript-entry.system {
+            background: rgba(168, 85, 247, 0.2);
+            border-left-color: #a855f7;
+        }
+        .transcript-entry.error {
+            background: rgba(239, 68, 68, 0.2);
+            border-left-color: #ef4444;
+        }
+
+        .transcript-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transcript-content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .tools-section {
+            margin-bottom: 20px;
+        }
+
+        .tools-list {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .tool-item {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .tool-name {
+            font-weight: bold;
+            color: #ffc107;
+            margin-bottom: 4px;
+        }
+
+        .tool-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 11px;
+        }
+
+        .config-section {
+            margin-bottom: 20px;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+        .config-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .stats {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+
+        .current-transcript {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-style: italic;
+            min-height: 40px;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            .side-panel {
+                order: -1;
+                height: auto;
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-panel">
+            <h1>🎤 Generic WebRTC + MCP Demo</h1>
+            
+            <div id="connectionStatus" class="status connecting">
+                🔄 Ready to connect...
+            </div>
+
+            <div class="controls">
+                <button id="connectBtn" onclick="connect()">🔗 Connect</button>
+                <button id="disconnectBtn" onclick="disconnect()" disabled>⏹️ Disconnect</button>
+                <button id="loadToolsBtn" onclick="loadTools()" disabled>🔧 Load Tools</button>
+                <button id="clearBtn" onclick="clearTranscript()">🗑️ Clear</button>
+            </div>
+
+            <div class="voice-controls">
+                <div id="connectionIndicator" class="connection-indicator">🎤</div>
+                <div id="voiceStatus">Configure server URL and click Connect</div>
+                
+                <div class="audio-level">
+                    <div>Audio Level:</div>
+                    <div class="audio-bar">
+                        <div id="audioFill" class="audio-fill"></div>
+                    </div>
+                    <div id="audioLevel">0%</div>
+                </div>
+            </div>
+
+            <div class="current-transcript">
+                <strong>Current Speech:</strong>
+                <div id="currentTranscript">Start speaking...</div>
+            </div>
+
+            <div class="transcript-container">
+                <h3>Conversation Transcript</h3>
+                <div class="transcript" id="transcript">
+                    <div class="transcript-entry system">
+                        <div class="transcript-header">
+                            <span>System</span>
+                            <span id="startTime"></span>
+                        </div>
+                        <div class="transcript-content">🚀 Generic WebRTC + MCP Demo ready!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="config-section">
+                <h3>🔧 Configuration</h3>
+                <input type="text" id="serverUrl" class="config-input" 
+                       placeholder="Bridge Server URL (e.g., http://localhost:8084)" 
+                       value="http://localhost:8084">
+                <input type="text" id="modelName" class="config-input" 
+                       placeholder="Model (e.g., gpt-4o-realtime-preview-2024-12-17)" 
+                       value="gpt-4o-realtime-preview-2024-12-17">
+            </div>
+
+            <div class="tools-section">
+                <h3>🛠️ Available Tools (<span id="toolCount">0</span>)</h3>
+                <div class="tools-list" id="toolsList">
+                    <div style="text-align: center; color: rgba(255,255,255,0.6);">
+                        Click "Load Tools" to discover available MCP tools
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats">
+                <h4>📊 Session Stats</h4>
+                <div class="stat-item">
+                    <span>Connection:</span>
+                    <span id="connectionTime">Not connected</span>
+                </div>
+                <div class="stat-item">
+                    <span>Messages:</span>
+                    <span id="messageCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Function Calls:</span>
+                    <span id="functionCallCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Audio Level:</span>
+                    <span id="audioLevelText">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioElement" autoplay style="display: none;"></audio>
+
+    <script>
+        let pc = null;
+        let dataChannel = null;
+        let audioStream = null;
+        let audioContext = null;
+        let analyser = null;
+        let serverUrl = 'http://localhost:8084';
+        let connectionStartTime = null;
+        let messageCount = 0;
+        let functionCallCount = 0;
+        let currentTranscriptText = '';
+
+        // Initialize
+        document.getElementById('startTime').textContent = new Date().toLocaleTimeString();
+
+        function addTranscriptEntry(type, content, metadata = {}) {
+            const transcript = document.getElementById('transcript');
+            const entry = document.createElement('div');
+            entry.className = `transcript-entry ${type}`;
+            
+            const header = document.createElement('div');
+            header.className = 'transcript-header';
+            header.innerHTML = `
+                <span>${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                <span>${new Date().toLocaleTimeString()}</span>
+            `;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'transcript-content';
+            contentDiv.textContent = content;
+            
+            entry.appendChild(header);
+            entry.appendChild(contentDiv);
+            transcript.appendChild(entry);
+            transcript.scrollTop = transcript.scrollHeight;
+            
+            messageCount++;
+            document.getElementById('messageCount').textContent = messageCount;
+        }
+
+        function updateStatus(message, type) {
+            const status = document.getElementById('connectionStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function updateVoiceStatus(message) {
+            document.getElementById('voiceStatus').textContent = message;
+        }
+
+        function updateConnectionIndicator(state) {
+            const indicator = document.getElementById('connectionIndicator');
+            indicator.className = `connection-indicator ${state}`;
+        }
+
+        function updateCurrentTranscript(text) {
+            document.getElementById('currentTranscript').textContent = text || 'Start speaking...';
+            currentTranscriptText = text || '';
+        }
+
+        async function connect() {
+            try {
+                serverUrl = document.getElementById('serverUrl').value || 'http://localhost:8084';
+                const model = document.getElementById('modelName').value || 'gpt-4o-realtime-preview-2024-12-17';
+                
+                updateStatus('🔑 Getting ephemeral API key...', 'connecting');
+                addTranscriptEntry('system', `Connecting to ${serverUrl}...`);
+
+                // Get ephemeral API key
+                const tokenResponse = await fetch(`${serverUrl}/session`);
+                if (!tokenResponse.ok) {
+                    throw new Error(`Failed to get ephemeral key: ${tokenResponse.status}`);
+                }
+                const sessionData = await tokenResponse.json();
+                const ephemeralKey = sessionData.client_secret.value;
+                addTranscriptEntry('system', '✅ Got ephemeral API key');
+
+                updateStatus('🔄 Creating WebRTC connection...', 'connecting');
+
+                // Create WebRTC peer connection
+                pc = new RTCPeerConnection();
+
+                // Set up audio playback
+                const audioEl = document.getElementById('audioElement');
+                pc.ontrack = e => {
+                    addTranscriptEntry('system', '📻 Received audio track from AI');
+                    audioEl.srcObject = e.streams[0];
+                };
+
+                // Add microphone
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                pc.addTrack(audioStream.getTracks()[0]);
+                addTranscriptEntry('system', '🎤 Added microphone audio track');
+
+                // Set up audio level monitoring
+                setupAudioLevelMonitoring(audioStream);
+
+                // Set up data channel
+                dataChannel = pc.createDataChannel("oai-events");
+                dataChannel.addEventListener("message", handleRealtimeEvent);
+                dataChannel.addEventListener("open", () => {
+                    addTranscriptEntry('system', '📡 Data channel opened');
+                    updateConnectionIndicator('connected');
+                    updateVoiceStatus('🎉 Connected! Start talking...');
+                    connectionStartTime = new Date();
+                    updateConnectionTime();
+                });
+
+                // Create offer and connect
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                addTranscriptEntry('system', '📤 Created WebRTC offer');
+
+                updateStatus('🌐 Connecting to OpenAI Realtime API...', 'connecting');
+                const sdpResponse = await fetch(`https://api.openai.com/v1/realtime?model=${model}`, {
+                    method: "POST",
+                    body: offer.sdp,
+                    headers: {
+                        Authorization: `Bearer ${ephemeralKey}`,
+                        "Content-Type": "application/sdp"
+                    },
+                });
+
+                if (!sdpResponse.ok) {
+                    throw new Error(`WebRTC connection failed: ${sdpResponse.status}`);
+                }
+
+                const answerSdp = await sdpResponse.text();
+                await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+
+                addTranscriptEntry('system', '✅ WebRTC connection established');
+                updateStatus('✅ Connected! Voice conversation active', 'connected');
+
+                // Update UI
+                document.getElementById('connectBtn').disabled = true;
+                document.getElementById('disconnectBtn').disabled = false;
+                document.getElementById('loadToolsBtn').disabled = false;
+
+            } catch (error) {
+                addTranscriptEntry('error', `Connection failed: ${error.message}`);
+                updateStatus('❌ Connection failed', 'error');
+                console.error('Connection error:', error);
+            }
+        }
+
+        function setupAudioLevelMonitoring(stream) {
+            audioContext = new AudioContext();
+            analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function updateAudioLevel() {
+                if (!analyser) return;
+                
+                analyser.getByteFrequencyData(dataArray);
+                const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+                const percentage = Math.round((average / 255) * 100);
+                
+                document.getElementById('audioFill').style.width = `${percentage}%`;
+                document.getElementById('audioLevel').textContent = `${percentage}%`;
+                document.getElementById('audioLevelText').textContent = `${percentage}%`;
+                
+                requestAnimationFrame(updateAudioLevel);
+            }
+            updateAudioLevel();
+        }
+
+        function handleRealtimeEvent(event) {
+            try {
+                const data = JSON.parse(event.data);
+                
+                switch (data.type) {
+                    case 'session.created':
+                        addTranscriptEntry('system', '🎉 AI session created');
+                        break;
+                        
+                    case 'session.updated':
+                        addTranscriptEntry('system', '🔄 AI session updated');
+                        break;
+                        
+                    case 'input_audio_buffer.speech_started':
+                        addTranscriptEntry('system', '🎤 Speech detected');
+                        updateConnectionIndicator('talking');
+                        updateVoiceStatus('🎤 Listening...');
+                        updateCurrentTranscript('');
+                        break;
+                        
+                    case 'input_audio_buffer.speech_stopped':
+                        addTranscriptEntry('system', '🛑 Speech ended');
+                        updateConnectionIndicator('connected');
+                        updateVoiceStatus('🤔 Processing...');
+                        if (currentTranscriptText) {
+                            addTranscriptEntry('user', currentTranscriptText);
+                            updateCurrentTranscript('');
+                        }
+                        break;
+                        
+                    case 'conversation.item.input_audio_transcription.delta':
+                        if (data.delta) {
+                            updateCurrentTranscript(currentTranscriptText + data.delta);
+                        }
+                        break;
+                        
+                    case 'conversation.item.input_audio_transcription.completed':
+                        if (data.transcript) {
+                            updateCurrentTranscript(data.transcript);
+                        }
+                        break;
+                        
+                    case 'response.created':
+                        addTranscriptEntry('system', '🚀 AI response started');
+                        break;
+                        
+                    case 'response.text.delta':
+                        if (data.delta) {
+                            addTranscriptEntry('assistant', data.delta);
+                        }
+                        break;
+                        
+                    case 'response.function_call_arguments.delta':
+                        addTranscriptEntry('system', `🛠️ Function call args: ${data.delta}`);
+                        break;
+                        
+                    case 'response.function_call_arguments.done':
+                        functionCallCount++;
+                        document.getElementById('functionCallCount').textContent = functionCallCount;
+                        addTranscriptEntry('system', `🛠️ Function call: ${data.name}(${data.arguments})`);
+                        handleFunctionCall(data);
+                        break;
+                        
+                    case 'response.done':
+                        updateVoiceStatus('🎉 Ready for next question...');
+                        addTranscriptEntry('system', '✅ Response completed');
+                        break;
+                        
+                    case 'error':
+                        addTranscriptEntry('error', `AI Error: ${data.error?.message || 'Unknown error'}`);
+                        break;
+                        
+                    default:
+                        if (data.type.includes('function') || data.type.includes('tool')) {
+                            addTranscriptEntry('system', `🛠️ ${data.type}`);
+                        }
+                }
+            } catch (error) {
+                console.error('Error parsing realtime event:', error);
+                addTranscriptEntry('error', `Parse error: ${error.message}`);
+            }
+        }
+
+        async function handleFunctionCall(functionCallData) {
+            const functionName = functionCallData.name;
+            const argumentsStr = functionCallData.arguments;
+            
+            try {
+                const functionArgs = JSON.parse(argumentsStr);
+                const mcpToolName = functionName.replace(/_/g, '-');
+                
+                addTranscriptEntry('system', `📡 Calling MCP tool: ${mcpToolName}`);
+                
+                const mcpRequest = {
+                    jsonrpc: '2.0',
+                    method: 'tools/call',
+                    params: {
+                        name: mcpToolName,
+                        arguments: functionArgs
+                    },
+                    id: `func-${Date.now()}`
+                };
+                
+                const response = await fetch(`${serverUrl}/mcp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(mcpRequest)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`MCP API error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error.message || 'MCP function call failed');
+                }
+
+                addTranscriptEntry('system', `✅ MCP response received for ${functionName}`);
+
+                // Send result back to AI
+                const functionResult = {
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'function_call_output',
+                        call_id: functionCallData.call_id,
+                        output: JSON.stringify(result.result || result)
+                    }
+                };
+
+                dataChannel.send(JSON.stringify(functionResult));
+                
+                setTimeout(() => {
+                    dataChannel.send(JSON.stringify({ type: 'response.create' }));
+                }, 100);
+
+            } catch (error) {
+                console.error('Function call error:', error);
+                addTranscriptEntry('error', `Function call failed: ${error.message}`);
+
+                const errorResult = {
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'function_call_output',
+                        call_id: functionCallData.call_id,
+                        output: JSON.stringify({
+                            error: error.message,
+                            success: false
+                        })
+                    }
+                };
+
+                dataChannel.send(JSON.stringify(errorResult));
+            }
+        }
+
+        async function loadTools() {
+            try {
+                addTranscriptEntry('system', '🔧 Loading available tools...');
+                
+                const response = await fetch(`${serverUrl}/mcp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'tools/list',
+                        params: {},
+                        id: 'tools-' + Date.now()
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load tools: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const tools = result.result?.tools || [];
+                
+                document.getElementById('toolCount').textContent = tools.length;
+                
+                const toolsList = document.getElementById('toolsList');
+                if (tools.length === 0) {
+                    toolsList.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.6);">No tools available</div>';
+                } else {
+                    toolsList.innerHTML = tools.map(tool => `
+                        <div class="tool-item">
+                            <div class="tool-name">${tool.name}</div>
+                            <div class="tool-description">${tool.description || 'No description'}</div>
+                        </div>
+                    `).join('');
+                }
+                
+                addTranscriptEntry('system', `✅ Loaded ${tools.length} tools`);
+                
+            } catch (error) {
+                addTranscriptEntry('error', `Failed to load tools: ${error.message}`);
+            }
+        }
+
+        function disconnect() {
+            addTranscriptEntry('system', '🔌 Disconnecting...');
+
+            if (dataChannel) {
+                dataChannel.close();
+                dataChannel = null;
+            }
+
+            if (pc) {
+                pc.close();
+                pc = null;
+            }
+
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+                analyser = null;
+            }
+
+            updateStatus('🔌 Disconnected', 'connecting');
+            updateVoiceStatus('Configure server URL and click Connect');
+            updateConnectionIndicator('');
+            updateCurrentTranscript('');
+            
+            document.getElementById('connectBtn').disabled = false;
+            document.getElementById('disconnectBtn').disabled = true;
+            document.getElementById('loadToolsBtn').disabled = true;
+            
+            connectionStartTime = null;
+            document.getElementById('connectionTime').textContent = 'Not connected';
+
+            addTranscriptEntry('system', '✅ Disconnected successfully');
+        }
+
+        function clearTranscript() {
+            document.getElementById('transcript').innerHTML = `
+                <div class="transcript-entry system">
+                    <div class="transcript-header">
+                        <span>System</span>
+                        <span>${new Date().toLocaleTimeString()}</span>
+                    </div>
+                    <div class="transcript-content">🗑️ Transcript cleared</div>
+                </div>
+            `;
+            messageCount = 0;
+            functionCallCount = 0;
+            document.getElementById('messageCount').textContent = '0';
+            document.getElementById('functionCallCount').textContent = '0';
+        }
+
+        function updateConnectionTime() {
+            if (connectionStartTime) {
+                const elapsed = Math.floor((new Date() - connectionStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('connectionTime').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+            setTimeout(updateConnectionTime, 1000);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', disconnect);
+    </script>
+</body>
+</html> 

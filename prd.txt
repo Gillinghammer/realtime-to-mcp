@@ -1,0 +1,141 @@
+Project PRD: Realtime API MCP Proxy Library
+
+Project Overview
+
+We're building an open-source Node.js/TypeScript library and demo UI that bridges the OpenAI Realtime API with remote MCP servers. This service will act as a proxy layer that listens for function calls from Realtime models and translates them into MCP tool calls, returning the output back as tool_response events.
+
+This unlocks real-time, multimodal interactions (e.g., speech-to-speech) that can call arbitrary remote MCP tools, including enterprise- and developer-hosted services.
+
+Objectives
+
+Realtime-to-MCP Proxy Library
+
+Expose a lightweight, extensible interface for handling OpenAI Realtime API sessions
+
+Route function calls to appropriate MCP servers/tools
+
+Return MCP output back as function results
+
+Web-Based Demo Interface
+
+Allow users to:
+
+Enter their OpenAI API key
+
+Provide an MCP server URL + allowed tools
+
+See the roundtrip flow from voice input to MCP output
+
+Open Source Ready
+
+Clear README, setup instructions, MIT License
+
+Type-safe, testable, and documented for contributions
+
+Features
+
+Library: realtime-mcp-proxy
+
+Core Modules
+
+Realtime Session Manager
+
+Manages WebSocket or WebRTC sessions with Realtime API
+
+Handles audio stream and event parsing
+
+Captures function_call events and dispatches to handler
+
+Function Call Router
+
+Maps function names to { mcp_server_url, tool_name }
+
+Supports a static or user-defined mapping config
+
+MCP Client
+
+Implements the MCP spec (tool listing, tool call, approvals)
+
+Supports authentication headers
+
+Uses HTTP or HTTP/SSE
+
+Function Response Sender
+
+Takes MCP tool output and formats a tool_response payload
+
+Sends the response back over Realtime session
+
+Utilities
+
+Schema validator (MCP JSON schema vs function args)
+
+Logging + error tracking hooks
+
+Optional: mock MCP server for local testing
+
+Demo Web App: realtime-mcp-demo
+
+Features
+
+User input:
+
+OpenAI API key
+
+MCP server URL
+
+Allowed tools (dropdown from live tool listing)
+
+Microphone interface to trigger Realtime API session
+
+Shows:
+
+Streaming transcription
+
+Function calls
+
+MCP tool output
+
+Live console log of events (diagnostic panel)
+
+Built with
+
+React + TypeScript (Vite or Next.js)
+
+Uses WebRTC client from OpenAI Realtime API docs
+
+Backend serverless function (optional) for ephemeral key generation
+
+Milestones
+
+Phase 1: Internal Alpha (1–2 weeks)
+
+
+
+Phase 2: General Library (2–3 weeks)
+
+
+
+Phase 3: Demo UI (2 weeks)
+
+
+
+Success Criteria
+
+✅ Voice interaction → Function call → MCP tool call → Spoken reply
+
+✅ Works with at least 3 real-world MCP servers (e.g., DeepWiki, Stripe, HubSpot)
+
+✅ Library is independently installable via NPM and supports config injection
+
+✅ GitHub repo is beginner-friendly with examples and documentation
+
+Future Considerations
+
+Multi-tool MCP support
+
+Real-time approval UI in demo
+
+Server-mode support for Twilio phone input
+
+Hosting registry of tested MCP servers
