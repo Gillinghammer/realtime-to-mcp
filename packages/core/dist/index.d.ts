@@ -524,6 +524,8 @@ declare class WebRTCBridgeServer {
     private mcpProcess;
     private mcpClient;
     private isRunning;
+    private functionNameToMCPTool;
+    private mcpToolToFunctionName;
     constructor(config: WebRTCBridgeConfig);
     /**
      * Start the WebRTC bridge server
@@ -548,6 +550,7 @@ declare class WebRTCBridgeServer {
     private startHTTPServer;
     private getGenericDemoHTML;
     private sanitizeFunctionName;
+    private getOriginalMCPToolName;
     private convertMCPSchemaToOpenAI;
     private convertProperty;
     private convertProperties;

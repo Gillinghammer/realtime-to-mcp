@@ -299,6 +299,9 @@ var WebRTCBridgeServer = class {
   mcpProcess = null;
   mcpClient = null;
   isRunning = false;
+  // Bidirectional mapping between OpenAI function names and MCP tool names
+  functionNameToMCPTool = /* @__PURE__ */ new Map();
+  mcpToolToFunctionName = /* @__PURE__ */ new Map();
   constructor(config) {
     this.config = {
       ...config,
@@ -361,6 +364,8 @@ var WebRTCBridgeServer = class {
       }));
     }
     await Promise.all(stopPromises);
+    this.functionNameToMCPTool.clear();
+    this.mcpToolToFunctionName.clear();
     console.log("\u{1F6D1} WebRTC Bridge Server stopped");
   }
   /**
@@ -485,7 +490,11 @@ var WebRTCBridgeServer = class {
             break;
           case "tools/call":
             const { name, arguments: args } = params;
-            result = await this.mcpClient.callTool(name, args);
+            const originalToolName = this.getOriginalMCPToolName(name);
+            if (this.config.debug?.enabled || this.config.debug?.logFunctionCalls) {
+              console.log(`\u{1F504} Function call mapping: "${name}" \u2192 "${originalToolName}"`);
+            }
+            result = await this.mcpClient.callTool(originalToolName, args);
             res.json({
               jsonrpc: "2.0",
               result,
@@ -1490,8 +1499,40 @@ var WebRTCBridgeServer = class {
 </body>
 </html>`;
   }
-  sanitizeFunctionName(name) {
-    return name.replace(/[^a-zA-Z0-9_]/g, "_").replace(/^[^a-zA-Z]/, "fn_").substring(0, 64);
+  sanitizeFunctionName(originalName) {
+    if (this.mcpToolToFunctionName.has(originalName)) {
+      return this.mcpToolToFunctionName.get(originalName);
+    }
+    let sanitized = originalName.replace(/[^a-zA-Z0-9]/g, " ").split(/\s+/).filter((word) => word.length > 0).map((word, index) => {
+      if (index === 0) {
+        return word.toLowerCase();
+      } else {
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }
+    }).join("");
+    if (!/^[a-zA-Z]/.test(sanitized)) {
+      sanitized = "fn" + sanitized.charAt(0).toUpperCase() + sanitized.slice(1);
+    }
+    if (sanitized.length > 64) {
+      sanitized = sanitized.substring(0, 64);
+    }
+    if (sanitized.length === 0) {
+      sanitized = "unknownTool";
+    }
+    let finalName = sanitized;
+    let counter = 1;
+    while (this.functionNameToMCPTool.has(finalName)) {
+      const suffix = counter.toString();
+      const maxBaseLength = 64 - suffix.length;
+      finalName = sanitized.substring(0, maxBaseLength) + suffix;
+      counter++;
+    }
+    this.functionNameToMCPTool.set(finalName, originalName);
+    this.mcpToolToFunctionName.set(originalName, finalName);
+    return finalName;
+  }
+  getOriginalMCPToolName(functionName) {
+    return this.functionNameToMCPTool.get(functionName) || functionName;
   }
   convertMCPSchemaToOpenAI(schema) {
     if (!schema || typeof schema !== "object") {

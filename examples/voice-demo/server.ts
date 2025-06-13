@@ -256,6 +256,7 @@ app.post('/api/connect/:providerId', async (req, res) => {
       data: { isConnecting: true, discoveredTools: [] }
     });
     
+    console.log('\n🎯 ===== STARTING CONNECTION =====');
     addLog(`🚀 Starting connection to ${provider.name}...`, 'info');
     
     // Stop current bridge if running
@@ -281,12 +282,15 @@ app.post('/api/connect/:providerId', async (req, res) => {
       },
       debug: {
         enabled: process.env.DEBUG === 'true',
-        logTools: process.env.DEBUG_TOOLS === 'true',
+        logTools: false, // Disable verbose tool logging during connection
         logFunctionCalls: process.env.DEBUG_FUNCTIONS === 'true',
       },
     };
     
+    addLog(`🔧 Creating WebRTC bridge on port ${PORT + 100}...`, 'info');
     activeBridge = new WebRTCBridgeServer(bridgeConfig);
+    
+    addLog(`🚀 Starting bridge server...`, 'info');
     await activeBridge.start();
     
     // Get tools from the MCP API after connection
@@ -317,6 +321,7 @@ app.post('/api/connect/:providerId', async (req, res) => {
     });
     
     addLog(`🎙️ Voice interface ready at http://${HOST}:${PORT + 100}/demo`, 'success');
+    console.log('🎯 ===== CONNECTION SUCCESSFUL =====\n');
     
     res.json({ 
       success: true, 
@@ -329,7 +334,16 @@ app.post('/api/connect/:providerId', async (req, res) => {
   } catch (error) {
     isConnecting = false;
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    addLog(`❌ Failed to connect: ${errorMessage}`, 'error');
+    const fullError = error instanceof Error ? error.stack : error;
+    
+    // Log to both our system and stderr for visibility
+    addLog(`❌ CRITICAL ERROR: Failed to connect to ${providerId}`, 'error');
+    addLog(`💥 Error details: ${errorMessage}`, 'error');
+    console.error('\n🚨 ===== CONNECTION ERROR =====');
+    console.error(`Provider: ${providerId}`);
+    console.error(`Error: ${errorMessage}`);
+    console.error(`Full stack:`, fullError);
+    console.error('🚨 =============================\n');
     
     broadcast({
       type: 'state',
@@ -338,7 +352,8 @@ app.post('/api/connect/:providerId', async (req, res) => {
     
     res.status(500).json({ 
       error: 'Failed to start bridge',
-      message: errorMessage
+      message: errorMessage,
+      provider: providerId
     });
   }
 });
@@ -1412,23 +1427,8 @@ function getMainHTML(): string {
             try {
                 const { call_id, name, arguments: args } = functionCallData;
                 
-                // Get the original MCP tool name by checking all discovered tools
-                let mcpToolName = name;
-                if (currentState.discoveredTools && currentState.discoveredTools.length > 0) {
-                    // Find the original tool that matches this sanitized function name
-                    const matchingTool = currentState.discoveredTools.find(tool => {
-                        const sanitized = tool.name
-                            .replace(/[^a-zA-Z0-9_]/g, '_')
-                            .replace(/^[^a-zA-Z]/, 'fn_')
-                            .substring(0, 64);
-                        return sanitized === name;
-                    });
-                    
-                    if (matchingTool) {
-                        mcpToolName = matchingTool.name;
-                    }
-                }
-                
+                // Bridge server now handles function name mapping automatically
+                // Just send the OpenAI function name directly
                 const parsedArgs = JSON.parse(args);
                 
                 // Call the MCP tool via our bridge server
@@ -1442,7 +1442,7 @@ function getMainHTML(): string {
                         id: Date.now(),
                         method: 'tools/call',
                         params: {
-                            name: mcpToolName,
+                            name: name, // Bridge server handles the mapping
                             arguments: parsedArgs
                         }
                     })
@@ -1455,7 +1455,7 @@ function getMainHTML(): string {
                 }
                 
                 // Add tool call to transcript with response
-                addToolCallToTranscript(mcpToolName, parsedArgs, result.result, 'success');
+                addToolCallToTranscript(name, parsedArgs, result.result, 'success');
                 
                 // Send the result back to OpenAI via the data channel
                 dataChannel.send(JSON.stringify({
@@ -1483,9 +1483,9 @@ function getMainHTML(): string {
                 // Add error to transcript
                 try {
                     const errorArgs = args ? JSON.parse(args) : {};
-                    addToolCallToTranscript(mcpToolName || name, errorArgs, { error: error.message }, 'error');
+                    addToolCallToTranscript(name, errorArgs, { error: error.message }, 'error');
                 } catch (parseError) {
-                    addToolCallToTranscript(mcpToolName || name, { args }, { error: error.message }, 'error');
+                    addToolCallToTranscript(name, { args }, { error: error.message }, 'error');
                 }
                 
                 // Send error back to OpenAI

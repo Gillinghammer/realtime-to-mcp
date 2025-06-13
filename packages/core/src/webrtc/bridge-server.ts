@@ -268,6 +268,10 @@ export class WebRTCBridgeServer {
   private mcpProcess: ChildProcess | null = null;
   private mcpClient: MCPClientInterface | null = null;
   private isRunning = false;
+  
+  // Bidirectional mapping between OpenAI function names and MCP tool names
+  private functionNameToMCPTool = new Map<string, string>();
+  private mcpToolToFunctionName = new Map<string, string>();
 
   constructor(config: WebRTCBridgeConfig) {
     this.config = {
@@ -348,6 +352,11 @@ export class WebRTCBridgeServer {
     }
 
     await Promise.all(stopPromises);
+    
+    // Clear function name mappings for clean state
+    this.functionNameToMCPTool.clear();
+    this.mcpToolToFunctionName.clear();
+    
     console.log('🛑 WebRTC Bridge Server stopped');
   }
 
@@ -504,7 +513,14 @@ export class WebRTCBridgeServer {
 
           case 'tools/call':
             const { name, arguments: args } = params;
-            result = await this.mcpClient.callTool(name, args);
+            // Map OpenAI function name back to original MCP tool name
+            const originalToolName = this.getOriginalMCPToolName(name);
+            
+            if (this.config.debug?.enabled || this.config.debug?.logFunctionCalls) {
+              console.log(`🔄 Function call mapping: "${name}" → "${originalToolName}"`);
+            }
+            
+            result = await this.mcpClient.callTool(originalToolName, args);
             res.json({
               jsonrpc: '2.0',
               result,
@@ -1544,13 +1560,65 @@ export class WebRTCBridgeServer {
 </html>`;
   }
 
-  private sanitizeFunctionName(name: string): string {
-    // Convert MCP tool names to valid OpenAI function names
-    // Rules: letters, numbers, underscores only, max 64 chars, must start with letter
-    return name
-      .replace(/[^a-zA-Z0-9_]/g, '_')  // Replace invalid chars with underscores
-      .replace(/^[^a-zA-Z]/, 'fn_')    // Ensure starts with letter
-      .substring(0, 64);               // Limit to 64 characters
+  private sanitizeFunctionName(originalName: string): string {
+    // Check if we already have a mapping for this tool
+    if (this.mcpToolToFunctionName.has(originalName)) {
+      return this.mcpToolToFunctionName.get(originalName)!;
+    }
+
+    // Convert MCP tool names to valid OpenAI function names (camelCase)
+    // OpenAI Realtime API prefers camelCase over underscores
+    let sanitized = originalName
+      // Replace non-alphanumeric characters with spaces for proper camelCase conversion
+      .replace(/[^a-zA-Z0-9]/g, ' ')
+      // Split into words and convert to camelCase
+      .split(/\s+/)
+      .filter(word => word.length > 0)
+      .map((word, index) => {
+        if (index === 0) {
+          // First word: lowercase
+          return word.toLowerCase();
+        } else {
+          // Subsequent words: capitalize first letter
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        }
+      })
+      .join('');
+
+    // Ensure starts with letter (if it doesn't, prepend 'fn')
+    if (!/^[a-zA-Z]/.test(sanitized)) {
+      sanitized = 'fn' + sanitized.charAt(0).toUpperCase() + sanitized.slice(1);
+    }
+
+    // Limit to 64 characters
+    if (sanitized.length > 64) {
+      sanitized = sanitized.substring(0, 64);
+    }
+
+    // Handle edge case where name might be empty or too short
+    if (sanitized.length === 0) {
+      sanitized = 'unknownTool';
+    }
+
+    // Ensure uniqueness by adding suffix if needed
+    let finalName = sanitized;
+    let counter = 1;
+    while (this.functionNameToMCPTool.has(finalName)) {
+      const suffix = counter.toString();
+      const maxBaseLength = 64 - suffix.length;
+      finalName = sanitized.substring(0, maxBaseLength) + suffix;
+      counter++;
+    }
+
+    // Store bidirectional mapping
+    this.functionNameToMCPTool.set(finalName, originalName);
+    this.mcpToolToFunctionName.set(originalName, finalName);
+
+    return finalName;
+  }
+
+  private getOriginalMCPToolName(functionName: string): string {
+    return this.functionNameToMCPTool.get(functionName) || functionName;
   }
 
   private convertMCPSchemaToOpenAI(schema: any): any {
