@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **UI Cleanup**: Removed duplicate "Voice chat active" status messages for cleaner interface
 
 ### 🐛 Fixed
+- **OpenAI Function Naming Compatibility**: Fixed "Unknown tool" errors caused by underscore-based MCP tool names not being compatible with OpenAI Realtime API
+- **HubSpot MCP Integration**: Resolved environment variable loading issues preventing HubSpot provider from showing as available
+- **Function Name Mapping**: Implemented bidirectional camelCase conversion (hubspot_list_workflows ↔ hubspotListWorkflows) with proper reverse mapping
+- **Environment Variable Loading**: Created .env template file for voice-demo with proper HUBSPOT_TOKEN and other required variables
+- **Debug Visibility**: Enhanced error logging with clear function call mapping traces and reduced verbose tool output during connection
 - **Transcript Chronological Order**: Tool calls now appear in correct sequence (User → Tool Call → AI Response) instead of interrupting streaming responses
 - **JavaScript Syntax Error**: Fixed malformed if-else chain in handleVoiceMessage function
 - **Missing Configuration**: Voice demo now properly applies performance optimizations (speed, temperature, turn detection) that were previously ignored
