@@ -17,13 +17,13 @@ A TypeScript library that bridges OpenAI's Realtime API with [Model Context Prot
 ### Installation
 
 ```bash
-npm install @realtime-mcp/core
+npm install @gillinghammer/realtime-mcp-core
 ```
 
 ### Basic Usage
 
 ```typescript
-import { WebRTCBridgeServer } from '@realtime-mcp/core';
+import { WebRTCBridgeServer } from '@gillinghammer/realtime-mcp-core';
 
 const bridge = new WebRTCBridgeServer({
   openai: {

@@ -4,14 +4,14 @@ dotenv.config();
 
 // Debug environment loading
 console.log('🔧 Environment variable debug:');
-console.log(`   OPENAI_API_KEY: ${process.env.OPENAI_API_KEY?.slice(0, 20)}...${process.env.OPENAI_API_KEY?.slice(-10) || 'undefined'}`);
+console.log(`   OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'Set ✅' : 'Not set ❌'}`);
 console.log(`   .env file path: ${process.cwd()}/.env`);
 
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
-import { WebRTCBridgeServer } from '@realtime-mcp/core';
-import type { WebRTCBridgeConfig } from '@realtime-mcp/core';
+import { WebRTCBridgeServer } from '@gillinghammer/realtime-mcp-core';
+import type { WebRTCBridgeConfig } from '@gillinghammer/realtime-mcp-core';
 import cors from 'cors';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -206,7 +206,40 @@ This is a voice interface, so focus on the most important product details and av
       'Find books about artificial intelligence',
       'Look for kitchen appliances'
     ]
-  }
+  },
+  {
+    id: 'ableton',
+    name: 'Ableton Live',
+    description: 'Control Ableton Live DAW for music production and performance',
+    icon: '🎵',
+    config: {
+      command: 'uvx',
+      args: ['ableton-mcp'],
+      timeout: 30000,
+    },
+    instructions: `You are a helpful music production assistant with access to Ableton Live DAW.
+
+You can help users with:
+- Controlling playback, recording, and transport functions
+- Managing tracks, clips, and scenes in Live sets
+- Adjusting mixer settings, volumes, and effects
+- Working with devices, instruments, and audio effects
+- Managing the session and arrangement views
+- Controlling tempo, quantization, and timing
+
+Always provide clear guidance for music production tasks. When working with Ableton Live, explain what you're doing in musical terms that producers would understand. Be helpful with both creative and technical aspects of music production.
+
+This is a voice interface, so focus on the most important controls and avoid overwhelming users with too many technical parameters at once.`,
+    requiredEnvVars: [],
+    voiceCommands: [
+      'Start playbook in Ableton',
+      'Stop the current recording',
+      'Set the tempo to 120 BPM',
+      'Create a new audio track',
+      'Launch the first scene',
+      'Adjust the master volume'
+    ]
+  },
 ];
 
 // Global state
