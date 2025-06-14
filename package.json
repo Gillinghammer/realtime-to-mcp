@@ -48,10 +48,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/realtime-mcp-proxy.git"
+    "url": "https://github.com/Gillinghammer/realtime-to-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/realtime-mcp-proxy/issues"
+    "url": "https://github.com/Gillinghammer/realtime-to-mcp/issues"
   },
-  "homepage": "https://github.com/your-org/realtime-mcp-proxy#readme"
+  "homepage": "https://github.com/Gillinghammer/realtime-to-mcp#readme"
 } 
