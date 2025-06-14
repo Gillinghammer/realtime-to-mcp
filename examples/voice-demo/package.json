@@ -1,7 +1,7 @@
 {
   "name": "realtime-mcp-voice-demo",
   "version": "0.1.0",
-  "description": "Unified voice interface for multiple MCP servers - HubSpot, HackerNews, Airbnb, and more",
+  "description": "Unified voice interface for multiple MCP servers - HubSpot, HackerNews, Airbnb, Blender, Fewsats, Amazon, and more",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",

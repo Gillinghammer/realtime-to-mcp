@@ -1,6 +1,6 @@
 # 🎙️ Unified Voice Demo
 
-**One voice interface for all MCP servers** - Switch between HubSpot, Hacker News, Airbnb, and any custom MCP providers with a single click.
+**One voice interface for all MCP servers** - Switch between HubSpot, Hacker News, Airbnb, Blender, Fewsats, Amazon, and any custom MCP providers with a single click.
 
 ## ✨ What This Demo Does
 
@@ -17,6 +17,9 @@ This is a unified voice interface that lets you:
 | **HubSpot CRM** | 🏢 | Manage contacts, companies, deals | ✅ `HUBSPOT_TOKEN` |
 | **Hacker News** | 📰 | Tech news and discussions | ❌ No key needed |
 | **Airbnb Search** | 🏠 | Find properties and accommodations | ❌ No key needed |
+| **Blender 3D** | 🎨 | 3D modeling, animation, rendering | ❌ No key needed |
+| **Fewsats** | ⚡ | Bitcoin Lightning Network payments | ✅ `FEWSATS_API_KEY` |
+| **Amazon** | 📦 | Search and browse Amazon products | ❌ No key needed |
 
 ## 🚀 Quick Setup
 
@@ -47,6 +50,11 @@ nano .env  # or use your preferred editor
 2. Create a new private app with CRM permissions
 3. Copy the access token
 4. Add to `.env`: `HUBSPOT_TOKEN=pat-your-token-here`
+
+#### Fewsats API Key (Optional - for Lightning Network features)
+1. Visit [Fewsats](https://fewsats.com) and create an account
+2. Generate an API key from your dashboard
+3. Add to `.env`: `FEWSATS_API_KEY=your-api-key-here`
 
 ### 4. Start the Demo
 ```bash
@@ -88,6 +96,30 @@ http://localhost:8085
 - *"Show me places to stay in Tokyo"*
 - *"Find vacation rentals in Paris for July"*
 - *"Search for cabins in the mountains"*
+
+#### 🎨 Blender 3D
+- *"Create a new cube in the scene"*
+- *"Add a sphere and move it up"*
+- *"Set up basic lighting for the scene"*
+- *"Create a simple animation"*  
+- *"Render the current scene"*
+- *"Add a material to the selected object"*
+
+#### ⚡ Fewsats (Lightning Network)
+- *"Check my Lightning balance"*
+- *"Create an invoice for 1000 sats"*
+- *"Show recent transactions"*
+- *"Check payment status"*
+- *"Generate a new Lightning invoice"*
+- *"Show my node information"*
+
+#### 📦 Amazon
+- *"Search for wireless headphones on Amazon"*
+- *"Find the best rated coffee makers"*
+- *"Show me laptop deals under $1000"*
+- *"Search for running shoes"*
+- *"Find books about artificial intelligence"*
+- *"Look for kitchen appliances"*
 
 ## 🔧 Technical Architecture
 
@@ -151,6 +183,9 @@ OPENAI_API_KEY=sk-your-openai-api-key
 ```bash
 # HubSpot CRM Integration
 HUBSPOT_TOKEN=pat-your-hubspot-private-app-token
+
+# Fewsats Lightning Network Integration
+FEWSATS_API_KEY=your-fewsats-api-key
 
 # GitHub Integration (if you add GitHub MCP)
 GITHUB_TOKEN=ghp_your-github-personal-access-token

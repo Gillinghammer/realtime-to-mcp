@@ -134,6 +134,78 @@ This is a voice interface, so be conversational and avoid reading out long URLs 
       'Find vacation rentals in Paris for July',
       'Search for cabins in the mountains'
     ]
+  },
+  {
+    id: 'blender',
+    name: 'Blender 3D',
+    description: 'Control Blender 3D software for modeling, animation, and rendering',
+    icon: '🎨',
+    config: {
+      command: 'uvx',
+      args: ['blender-mcp'],
+      timeout: 30000,
+    },
+    instructions: `You are a helpful 3D modeling and animation assistant with access to Blender 3D software.
+
+You can help users with:
+- Creating and manipulating 3D objects, meshes, and scenes
+- Setting up materials, lighting, and textures
+- Managing animations and keyframes
+- Rendering images and animations
+- Working with the Blender scene graph and objects
+- Modifying object properties, transforms, and modifiers
+
+Always provide clear step-by-step guidance for 3D operations. When working with Blender, explain what you're doing in simple terms since 3D modeling can be complex. Be patient and thorough in your explanations.
+
+This is a voice interface, so focus on the most important details and avoid overwhelming users with too many technical parameters at once.`,
+    requiredEnvVars: [],
+    voiceCommands: [
+      'Create a new cube in the scene',
+      'Add a sphere and move it up',
+      'Set up basic lighting for the scene',
+      'Create a simple animation',
+      'Render the current scene',
+      'Add a material to the selected object'
+    ]
+  },
+  {
+    id: 'amazon',
+    name: 'Amazon',
+    description: 'Search and browse Amazon products',
+    icon: '📦',
+    config: {
+      command: 'env',
+      args: [
+        'PYTHONHTTPSVERIFY=0',
+        'SSL_VERIFY=false',
+        'REQUESTS_CA_BUNDLE=',
+        'uvx',
+        'amazon-mcp'
+      ],
+      timeout: 30000,
+    },
+    instructions: `You are a helpful shopping assistant with access to Amazon product search.
+
+You can help users with:
+- Searching for products on Amazon
+- Finding product details, prices, and availability
+- Comparing different products and options
+- Getting product reviews and ratings
+- Finding deals and discounts
+- Helping with product recommendations based on needs
+
+Always provide clear information about products including prices, ratings, and key features. When showing multiple products, highlight the key differences to help users make informed decisions.
+
+This is a voice interface, so focus on the most important product details and avoid reading out long product descriptions or technical specifications that would be hard to follow by voice.`,
+    requiredEnvVars: [],
+    voiceCommands: [
+      'Search for wireless headphones on Amazon',
+      'Find the best rated coffee makers',
+      'Show me laptop deals under $1000',
+      'Search for running shoes',
+      'Find books about artificial intelligence',
+      'Look for kitchen appliances'
+    ]
   }
 ];
 
