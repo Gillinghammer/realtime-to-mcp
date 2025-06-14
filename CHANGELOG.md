@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Centralized Defaults**: Created getDefaultSessionConfig() utility for consistent voice interface settings across all implementations
 - **Transcript Ordering Fix**: Eliminated streaming race conditions by collecting complete AI responses before adding to transcript, ensuring perfect chronological order
 - **UI Cleanup**: Removed duplicate "Voice chat active" status messages for cleaner interface
+- **SSL Configuration**: Added SSL certificate verification bypass for Amazon MCP to handle certificate chain issues
+- **Environment Variable Handling**: Improved `env` command approach for cleaner environment variable management
 
 ### 🐛 Fixed
 - **OpenAI Function Naming Compatibility**: Fixed "Unknown tool" errors caused by underscore-based MCP tool names not being compatible with OpenAI Realtime API
@@ -42,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ✨ Added
 - **🎙️ Unified Voice Demo** - Single interface for all MCP providers with dynamic switching
+- **🎨 Blender 3D Integration** - Voice-controlled 3D modeling, animation, and rendering capabilities
+- **📦 Amazon MCP Integration** - Product search and browsing with voice commands
 - Root README.md with simplified API showcase
 - Clean examples focusing on WebRTCBridgeServer  
 - Comprehensive documentation for browser integration
